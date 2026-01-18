@@ -2,7 +2,7 @@ import { readStdin } from './stdin.js';
 import { parseTranscript } from './transcript.js';
 import { render } from './render/index.js';
 import { countConfigs } from './config-reader.js';
-import { getGitStatus } from './git.js';
+import { getVcsStatus } from './vcs.js';
 import { getUsage } from './usage-api.js';
 import { loadConfig } from './config.js';
 import type { RenderContext } from './types.js';
@@ -12,7 +12,7 @@ export type MainDeps = {
   readStdin: typeof readStdin;
   parseTranscript: typeof parseTranscript;
   countConfigs: typeof countConfigs;
-  getGitStatus: typeof getGitStatus;
+  getVcsStatus: typeof getVcsStatus;
   getUsage: typeof getUsage;
   loadConfig: typeof loadConfig;
   render: typeof render;
@@ -25,7 +25,7 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
     readStdin,
     parseTranscript,
     countConfigs,
-    getGitStatus,
+    getVcsStatus,
     getUsage,
     loadConfig,
     render,
@@ -48,8 +48,8 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
     const { claudeMdCount, rulesCount, mcpCount, hooksCount } = await deps.countConfigs(stdin.cwd);
 
     const config = await deps.loadConfig();
-    const gitStatus = config.gitStatus.enabled
-      ? await deps.getGitStatus(stdin.cwd)
+    const vcsStatus = config.gitStatus.enabled
+      ? await deps.getVcsStatus(stdin.cwd)
       : null;
 
     // Only fetch usage if enabled in config (replaces env var requirement)
@@ -67,7 +67,7 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
       mcpCount,
       hooksCount,
       sessionDuration,
-      gitStatus,
+      vcsStatus,
       usageData,
       config,
     };

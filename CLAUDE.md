@@ -68,12 +68,14 @@ src/
 ├── transcript.ts      # Parse transcript JSONL
 ├── config-reader.ts   # Read MCP/rules configs
 ├── config.ts          # Load/validate user config
+├── vcs.ts             # VCS abstraction (detects git vs jujutsu)
 ├── git.ts             # Git status (branch, dirty, ahead/behind)
+├── jujutsu.ts         # Jujutsu status (change ID, bookmarks, conflicts)
 ├── usage-api.ts       # Fetch usage from Anthropic API
 ├── types.ts           # TypeScript interfaces
 └── render/
     ├── index.ts       # Main render coordinator
-    ├── session-line.ts   # Line 1: model, context, project, git, usage
+    ├── session-line.ts   # Line 1: model, context, project, VCS, usage
     ├── tools-line.ts     # Line 2: tool activity
     ├── agents-line.ts    # Line 3: agent status
     ├── todos-line.ts     # Line 4: todo progress
@@ -87,6 +89,11 @@ src/
 ◐ Edit: auth.ts | ✓ Read ×3 | ✓ Grep ×2
 ◐ explore [haiku]: Finding auth code (2m 15s)
 ▸ Fix authentication bug (2/5)
+```
+
+For Jujutsu repositories, displays `jj:(change-id)` instead:
+```
+[Opus | Pro] █████░░░░░ 45% | my-project jj:(abc123*) | 2 CLAUDE.md | 5h: 25%
 ```
 
 Lines are conditionally shown:
