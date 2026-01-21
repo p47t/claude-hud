@@ -83,4 +83,5 @@ export interface RenderContext {
   vcsStatus: VcsStatus | null;
   usageData: UsageData | null;
   config: HudConfig;
+  extraLabel: string | null;
 }

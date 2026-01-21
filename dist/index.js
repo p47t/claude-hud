@@ -5,7 +5,9 @@ import { countConfigs } from './config-reader.js';
 import { getGitStatus } from './git.js';
 import { getUsage } from './usage-api.js';
 import { loadConfig } from './config.js';
+import { parseExtraCmdArg, runExtraCmd } from './extra-cmd.js';
 import { fileURLToPath } from 'node:url';
+import { realpathSync } from 'node:fs';
 export async function main(overrides = {}) {
     const deps = {
         readStdin,
@@ -14,6 +16,8 @@ export async function main(overrides = {}) {
         getGitStatus,
         getUsage,
         loadConfig,
+        parseExtraCmdArg,
+        runExtraCmd,
         render,
         now: () => Date.now(),
         log: console.log,
@@ -36,6 +40,8 @@ export async function main(overrides = {}) {
         const usageData = config.display.showUsage !== false
             ? await deps.getUsage()
             : null;
+        const extraCmd = deps.parseExtraCmdArg();
+        const extraLabel = extraCmd ? await deps.runExtraCmd(extraCmd) : null;
         const sessionDuration = formatSessionDuration(transcript.sessionStart, deps.now);
         const ctx = {
             stdin,
@@ -48,6 +54,7 @@ export async function main(overrides = {}) {
             gitStatus,
             usageData,
             config,
+            extraLabel,
         };
         deps.render(ctx);
     }
@@ -69,7 +76,17 @@ export function formatSessionDuration(sessionStart, now = () => Date.now()) {
     const remainingMins = mins % 60;
     return `${hours}h ${remainingMins}m`;
 }
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+const scriptPath = fileURLToPath(import.meta.url);
+const argvPath = process.argv[1];
+const isSamePath = (a, b) => {
+    try {
+        return realpathSync(a) === realpathSync(b);
+    }
+    catch {
+        return a === b;
+    }
+};
+if (argvPath && isSamePath(argvPath, scriptPath)) {
     void main();
 }
 //# sourceMappingURL=index.js.map

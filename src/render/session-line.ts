@@ -1,7 +1,7 @@
 import type { RenderContext } from '../types.js';
 import { isLimitReached } from '../types.js';
 import { getContextPercent, getBufferedPercent, getModelName } from '../stdin.js';
-import { coloredBar, cyan, dim, magenta, red, yellow, getContextColor, RESET } from './colors.js';
+import { coloredBar, cyan, dim, magenta, red, yellow, getContextColor, quotaBar, RESET } from './colors.js';
 
 const DEBUG = process.env.DEBUG?.includes('claude-hud') || process.env.DEBUG === '*';
 
@@ -140,13 +140,25 @@ export function renderSessionLine(ctx: RenderContext): string {
       if (effectiveUsage >= usageThreshold) {
         const fiveHourDisplay = formatUsagePercent(fiveHour);
         const fiveHourReset = formatResetTime(ctx.usageData.fiveHourResetAt);
-        const fiveHourPart = fiveHourReset
-          ? `5h: ${fiveHourDisplay} (${fiveHourReset})`
-          : `5h: ${fiveHourDisplay}`;
+
+        const usageBarEnabled = display?.usageBarEnabled ?? true;
+        const fiveHourPart = usageBarEnabled
+          ? (fiveHourReset
+              ? `${quotaBar(fiveHour ?? 0)} ${fiveHourDisplay} (${fiveHourReset} / 5h)`
+              : `${quotaBar(fiveHour ?? 0)} ${fiveHourDisplay}`)
+          : (fiveHourReset
+              ? `5h: ${fiveHourDisplay} (${fiveHourReset})`
+              : `5h: ${fiveHourDisplay}`);
 
         if (sevenDay !== null && sevenDay >= 80) {
           const sevenDayDisplay = formatUsagePercent(sevenDay);
-          parts.push(`${fiveHourPart} | 7d: ${sevenDayDisplay}`);
+          const sevenDayReset = formatResetTime(ctx.usageData.sevenDayResetAt);
+          const sevenDayPart = usageBarEnabled
+            ? (sevenDayReset
+                ? `${quotaBar(sevenDay)} ${sevenDayDisplay} (${sevenDayReset} / 7d)`
+                : `${quotaBar(sevenDay)} ${sevenDayDisplay}`)
+            : `7d: ${sevenDayDisplay}`;
+          parts.push(`${fiveHourPart} | ${sevenDayPart}`);
         } else {
           parts.push(fiveHourPart);
         }
@@ -157,6 +169,10 @@ export function renderSessionLine(ctx: RenderContext): string {
   // Session duration
   if (display?.showDuration !== false && ctx.sessionDuration) {
     parts.push(dim(`⏱️  ${ctx.sessionDuration}`));
+  }
+
+  if (ctx.extraLabel) {
+    parts.push(dim(ctx.extraLabel));
   }
 
   let line = parts.join(' | ');
